@@ -4,67 +4,69 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { server as wisp } from '@mercuryworkshop/wisp-js/server';
 import path from 'node:path';
-import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 8080;
 const PUBLIC = path.join(__dirname, 'public');
 
-function pkgDir(pkg, ...candidates) {
-  const base = path.join(__dirname, 'node_modules', pkg);
-  for (const candidate of candidates) {
-    const dir = candidate ? path.join(base, candidate) : base;
-    if (fs.existsSync(dir)) return dir;
-  }
-  throw new Error(`Could not find package directory for ${pkg}`);
-}
-
-const scramjetDist = pkgDir('@mercuryworkshop/scramjet', 'dist', 'build', '');
-const baremuxDist = pkgDir('@mercuryworkshop/bare-mux', 'dist', '');
-const libcurlDist = pkgDir('@mercuryworkshop/libcurl-transport', 'dist', '');
-
 const app = Fastify({ logger: true });
-
-console.log('Scramjet:', scramjetDist);
-console.log('BareMux:', baremuxDist);
-console.log('libcurl:', libcurlDist);
 
 await app.register(fastifyStatic, {
   root: PUBLIC,
   prefix: '/',
+  decorateReply: true,
 });
 
-await app.register(fastifyStatic, {
-  root: scramjetDist,
-  prefix: '/scramjet/',
-  decorateReply: false,
+// Scramjet v2's browser assets are copied/served from public/scramjet.
+// This avoids depending on the internal node_modules directory layout at runtime.
+app.register(async function scramjetAssets(instance) {
+  const fs = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  const require = createRequire(import.meta.url);
+
+  let pkgRoot;
+  try {
+    pkgRoot = path.dirname(require.resolve('@mercuryworkshop/scramjet/package.json'));
+  } catch {
+    instance.log.error('Scramjet package was not installed');
+    return;
+  }
+
+  const candidates = [
+    path.join(pkgRoot, 'dist'),
+    path.join(pkgRoot, 'build'),
+    pkgRoot,
+  ];
+
+  const root = candidates.find(dir => fs.existsSync(dir));
+  if (!root) return;
+
+  instance.register(fastifyStatic, {
+    root,
+    prefix: '/scramjet/',
+    decorateReply: false,
+  });
 });
 
-await app.register(fastifyStatic, {
-  root: baremuxDist,
-  prefix: '/baremux/',
-  decorateReply: false,
+// Wisp websocket transport.
+app.server.on('upgrade', (req, socket, head) => {
+  if (req.url?.startsWith('/wisp/')) {
+    wisp.routeRequest(req, socket, head);
+  } else {
+    socket.destroy();
+  }
 });
 
-await app.register(fastifyStatic, {
-  root: libcurlDist,
-  prefix: '/libcurl/',
-  decorateReply: false,
-});
-
-// Only return index.html for browser document navigations.
-// Never turn a missing JS/WASM/worker file into HTML.
+// Do not turn missing JS/module/worker/WASM files into HTML.
 app.setNotFoundHandler((req, reply) => {
-  const accept = String(req.headers.accept || '');
   const pathname = req.url.split('?')[0];
+  const accept = String(req.headers.accept || '');
 
   if (
     accept.includes('text/html') &&
     !pathname.startsWith('/src/') &&
     !pathname.startsWith('/scramjet/') &&
-    !pathname.startsWith('/baremux/') &&
-    !pathname.startsWith('/libcurl/') &&
     !pathname.endsWith('.js') &&
     !pathname.endsWith('.mjs') &&
     !pathname.endsWith('.wasm')
@@ -77,13 +79,5 @@ app.setNotFoundHandler((req, reply) => {
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
-app.server.on('upgrade', (req, socket, head) => {
-  if (req.url?.startsWith('/wisp/')) {
-    wisp.routeRequest(req, socket, head);
-  } else {
-    socket.destroy();
-  }
-});
-
 console.log(`🚀 http://localhost:${PORT}`);
-console.log(`🔌 ws://localhost:${PORT}/wisp/`);
+console.log(`🔌 ws${PORT === 443 ? 's' : ''}://localhost:${PORT}/wisp/`);
