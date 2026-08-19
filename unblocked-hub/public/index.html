@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unblocked Hub – Games, AI & Proxy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- -------------------------------------------------
+     Inline CSS – keep it simple; move to style.css if you wish
+  ------------------------------------------------- -->
+<style>
+:root {
+    /* ---------- Colours (changed by the Settings tab) ---------- */
+    --bg:#121212;          /* page background */
+    --txt:#ffffff;        /* primary text */
+    --card:#1e1e1e;       /* panels / cards */
+    --accent:#00ffcc;     /* buttons, highlights */
+    --border:#444444;     /* subtle borders */
+}
+
+/* ---------- Global reset ---------- */
+*{box-sizing:border-box;}
+body{
+    margin:0;
+    font-family:system-ui,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+}
+
+/* ---------- Navigation bar ---------- */
+nav{
+    background:#000;
+    padding:0.75rem 1rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+nav h1{
+    margin:0;
+    font-size:1.3rem;
+    color:var(--accent);
+}
+nav button{
+    background:none;
+    border:none;
+    color:var(--txt);
+    margin-left:1rem;
+    font-size:1rem;
+    cursor:pointer;
+}
+nav button:hover{color:var(--accent);}
+
+/* ---------- Main container ---------- */
+.container{
+    max-width:1150px;
+    margin:auto;
+    padding:1rem;
+}
+
+/* ---------- Card / panel ---------- */
+.card{
+    background:var(--card);
+    border-radius:0.75rem;
+    padding:1rem;
+    margin-bottom:1.5rem;
+    display:none;               /* hidden by default */
+}
+.card.active{display:block;}
+
+/* ---------- Form elements ---------- */
+input, textarea, select{
+    width:100%;
+    padding:0.6rem;
+    margin:0.4rem 0;
+    border:1px solid var(--border);
+    background:#333;
+    color:#fff;
+    border-radius:0.4rem;
+    font-size:1rem;
+}
+button.action{
+    background:var(--accent);
+    color:#000;
+    border:none;
+    border-radius:0.4rem;
+    padding:0.6rem 1.2rem;
+    cursor:pointer;
+    font-weight:bold;
+}
+button.action:hover{opacity:0.9;}
+
+/* ---------- Game grid ---------- */
+.game-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:0.8rem;
+}
+.game-item{
+    background:#333;
+    padding:0.6rem;
+    text-align:center;
+    border-radius:0.4rem;
+    cursor:pointer;
+}
+.game-item:hover{background:#444;}
+
+/* ---------- Iframes ---------- */
+iframe{
+    width:100%;
+    border:none;
+    border-radius:0.5rem;
+}
+
+/* ---------- AI output box ---------- */
+#ai-output{
+    min-height:200px;
+    background:#222;
+    padding:0.8rem;
+    border-radius:0.4rem;
+    overflow:auto;
+    margin-bottom:0.5rem;
+}
+
+/* ---------- Light theme overrides (applied via JS) ---------- */
+.light{
+    --bg:#fafafa;
+    --txt:#111111;
+    --card:#ffffff;
+    --accent:#0066ff;
+    --border:#bbbbbb;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ==================== NAVIGATION ==================== -->
+<nav>
+    <h1>🕹️ Unblocked Hub</h1>
+    <div>
+        <button onclick="showTab('games')">Games</button>
+        <button onclick="showTab('ai')">AI Game</button>
+        <button onclick="showTab('proxy')">Proxy</button>
+        <button onclick="showTab('settings')">Settings</button>
+    </div>
+</nav>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="container">
+
+    <!-- -------------------- GAMES TAB -------------------- -->
+    <section id="games" class="card active">
+        <h2>HTML5 Games (unblocked)</h2>
+        <p>Select a game – it will load inside the iframe below.</p>
+
+        <div class="game-grid">
+            <!-- Replace these URLs with any public HTML5 games you like -->
+            <div class="game-item" onclick="loadGame('https://rawcdn.githack.com/wayou/awesome-github-profile-readme/6c2e3c8d/2048/2048.html')">2048</div>
+            <div class="game-item" onclick="loadGame('https://rawcdn.githack.com/chenmiao/awesome-javascript/4c6d5c3c/snake/index.html')">Snake</div>
+            <div class="game-item" onclick="loadGame('https://rawcdn.githack.com/CodeNerve/HTML-5-Tetris/master/tetris.html')">Tetris</div>
+            <div class="game-item" onclick="loadGame('https://rawcdn.githack.com/ggbaker/2048-clone/master/index.html')">2048 Clone</div>
+        </div>
+
+        <iframe id="gameFrame" style="display:none;height:500px;margin-top:1rem;"></iframe>
+    </section>
+
+    <!-- -------------------- AI GAME TAB -------------------- -->
+    <section id="ai" class="card">
+        <h2>AI‑Powered Text Adventure</h2>
+        <div id="ai-output"></div>
+
+        <textarea id="ai-input" rows="3" placeholder="What do you do?"></textarea>
+        <button class="action" onclick="sendAI()">Submit</button>
+    </section>
+
+    <!-- -------------------- PROXY TAB -------------------- -->
+    <section id="proxy" class="card">
+        <h2>Scramjet v2 Proxy Browser</h2>
+        <input id="proxy-url" type="text" placeholder="Enter a URL (e.g. https://example.com)">
+        <button class="action" onclick="openProxy()">Browse</button>
+
+        <iframe id="proxyFrame" style="display:none;height:650px;margin-top:1rem;"></iframe>
+    </section>
+
+    <!-- -------------------- SETTINGS TAB -------------------- -->
+    <section id="settings" class="card">
+        <h2>Options & Settings</h2>
+
+        <label for="theme-select">Theme:</label>
+        <select id="theme-select" onchange="changeTheme()">
+            <option value="dark" selected>Dark (default)</option>
+            <option value="light">Light</option>
+        </select>
+
+        <hr style="margin:1.5rem 0;">
+
+        <p><strong>Quick notes:</strong></p>
+        <ul>
+            <li>Games load inside an <code>&lt;iframe&gt;</code> so they stay sandboxed.</li>
+            <li>The AI endpoint uses OpenAI if you supplied an <code>OPENAI_API_KEY</code> in <code>.env</code>. Otherwise a deterministic mock reply is returned.</li>
+            <li>The proxy works by encoding the destination URL and sending it to <code>/proxy/&lt;url‑encoded&gt;</code>. All subsequent resources are automatically rewritten by Scramjet.</li>
+        </ul>
+    </section>
+
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+/* -------------------------------------------------
+   Simple tab navigation – only one card visible at a time
+   ------------------------------------------------- */
+function showTab(id) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+/* -------------------------------------------------
+   GAMES – load the selected URL into the iframe
+   ------------------------------------------------- */
+function loadGame(url) {
+    const frame = document.getElementById('gameFrame');
+    frame.src = url;
+    frame.style.display = 'block';
+}
+
+/* -------------------------------------------------
+   AI GAME – POST the user prompt to /api/ai-game
+   ------------------------------------------------- */
+async function sendAI() {
+    const inputEl = document.getElementById('ai-input');
+    const prompt  = inputEl.value.trim();
+    if (!prompt) return;
+
+    const output = document.getElementById('ai-output');
+
+    // Show the player’s line
+    output.innerHTML += `<p><em>You:</em> ${escapeHTML(prompt)}</p>`;
+    inputEl.value = '';
+    output.scrollTop = output.scrollHeight;
+
+    try {
+        const resp = await fetch('/api/ai-game', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({prompt})
+        });
+
+        const data = await resp.json();
+        output.innerHTML += `<p>${data.reply}</p>`;
+    } catch (e) {
+        output.innerHTML += `<p style="color:#f88;">❌  Failed to reach AI service.</p>`;
+    }
+
+    // Auto‑scroll to the bottom
+    output.scrollTop = output.scrollHeight;
+}
+
+/* -------------------------------------------------
+   PROXY – encode the URL and point the iframe at /proxy/
+   ------------------------------------------------- */
+function openProxy() {
+    let url = document.getElementById('proxy-url').value.trim();
+    if (!url) return;
+
+    // Ensure a scheme – users often type “google.com”
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+    // Encode the whole URL so Scramjet can decode it safely
+    const encoded = encodeURIComponent(url);
+    const proxySrc = `/proxy/${encoded}`;
+
+    const frame = document.getElementById('proxyFrame');
+    frame.src = proxySrc;
+    frame.style.display = 'block';
+}
+
+/* -------------------------------------------------
+   SETTINGS – theme toggle (dark ↔ light)
+   ------------------------------------------------- */
+function changeTheme() {
+    const theme = document.getElementById('theme-select').value;
+    if (theme === 'light') {
+        document.documentElement.classList.add('light');
+    } else {
+        document.documentElement.classList.remove('light');
+    }
+}
+
+/* -------------------------------------------------
+   Helper – simple HTML escaping (prevents XSS if you ever
+   display user‑generated strings inside the AI output)
+   ------------------------------------------------- */
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
+}
+
+/* -------------------------------------------------
+   OPTIONAL: Remember the chosen theme between page loads
+   ------------------------------------------------- */
+(function restoreTheme() {
+    const saved = localStorage.getItem('unblockedHubTheme');
+    if (saved) {
+        document.getElementById('theme-select').value = saved;
+        changeTheme();
+    }
+})();
+document.getElementById('theme-select').addEventListener('change', function () {
+    localStorage.setItem('unblockedHubTheme', this.value);
+});
+</script>
+</body>
+</html>
