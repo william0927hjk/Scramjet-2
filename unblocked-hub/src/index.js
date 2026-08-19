@@ -28,8 +28,10 @@ export async function sendAI() {
   try {
     const resp = await fetch('/api/ai-game', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
     });
     const data = await resp.json();
     output.innerHTML += `<p>${data.reply}</p>`;
@@ -68,20 +70,20 @@ function escapeHTML(str) {
   return div.innerHTML;
 }
 
-/* ---------- Persist theme between sessions ---------- */
-import { sessionStorage } from 'node-sessionstorage';
-(function restoreTheme() {
-  const saved = sessionStorage.getItem('unblockedHubTheme');
-  if (saved) {
-    document.getElementById('theme-select').value = saved;
-    changeTheme();
-  }
-})();
+// Remove the import statement
+// import { sessionStorage } from 'node-sessionstorage';
 
-document.getElementById('theme-select')
-  .addEventListener('change', function () {
-    sessionStorage.setItem('unblockedHubTheme', this.value);
-  });
+// Use the sessionStorage object directly
+// (function restoreTheme() {
+//   const saved = sessionStorage.getItem('unblockedHubTheme');
+//   if (saved) {
+//     document.getElementById('theme-select').value = saved;
+//     changeTheme();
+//   }
+// })();
+// document.getElementById('theme-select').addEventListener('change', function () {
+//   sessionStorage.setItem('unblockedHubTheme', this.value);
+// });
 
 /* ---------- Expose functions to the global scope ---------- (so the inline onclick attributes in index.html can call them) */
 window.showTab = showTab;
