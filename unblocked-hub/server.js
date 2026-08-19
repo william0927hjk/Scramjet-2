@@ -2,8 +2,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import { WebSocketServer } from 'ws';
-import { createWispServer } from 'wisp-server-node';
+import { server as wisp } from '@mercuryworkshop/wisp-js/server';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -43,10 +42,11 @@ await app.register(fastifyStatic, {
 // ─── Start ────────────────────────────────────────────────────────────────────
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
-// ─── Wisp WebSocket server (handles the actual TCP proxying) ──────────────────
+// ─── Wisp WebSocket server ────────────────────────────────────────────────────
+// wisp.routeRequest is a drop-in upgrade handler from @mercuryworkshop/wisp-js
 app.server.on('upgrade', (req, socket, head) => {
   if (req.url.startsWith('/wisp/')) {
-    createWispServer({ server: app.server })(req, socket, head);
+    wisp.routeRequest(req, socket, head);
   } else {
     socket.destroy();
   }
