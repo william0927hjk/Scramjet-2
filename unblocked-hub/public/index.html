@@ -6,8 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
 
-<!-- External CSS -->
+<!-- 1. EXTERNAL CSS: Make sure this file is in the SAME folder as index.html -->
 <link rel="stylesheet" href="style.css">
+
+<!-- Fallback CSS just in case -->
+<style>
+    body { background: #f0f2f5; color: #1a1a1a; font-family: sans-serif; margin: 0; }
+    #snowCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+</style>
 
 <!-- Cloak Favicon -->
 <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>">
@@ -94,7 +100,7 @@
 <!-- Load UI logic -->
 <script type="module" src="/src/index.js"></script>
 
-<!-- Load Main JS for UI, Snow, and Protection -->
+<!-- 2. EXTERNAL JAVASCRIPT: Make sure this file is in the SAME folder as index.html -->
 <script src="main.js"></script>
 
 </body>
