@@ -2,7 +2,6 @@
 // -------------------------------------------------
 // UI helper functions – identical to the previous inline script
 // -------------------------------------------------
-
 /* ---------- Tab navigation ---------- */
 export function showTab(id) {
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -21,24 +20,23 @@ export async function sendAI() {
   const inputEl = document.getElementById('ai-input');
   const prompt = inputEl.value.trim();
   if (!prompt) return;
-
   const output = document.getElementById('ai-output');
   output.innerHTML += `<p><em>You:</em> ${escapeHTML(prompt)}</p>`;
   inputEl.value = '';
   output.scrollTop = output.scrollHeight;
-
   try {
     const resp = await fetch('/api/ai-game', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
     output.innerHTML += `<p>${data.reply}</p>`;
   } catch (e) {
-    output.innerHTML += `<p style="color:#f88;">❌  Failed to reach AI service.</p>`;
+    output.innerHTML += `<p style="color:#f88;">❌ Failed to reach AI service.</p>`;
   }
-
   output.scrollTop = output.scrollHeight;
 }
 
@@ -72,22 +70,23 @@ function escapeHTML(str) {
 }
 
 /* ---------- Persist theme between sessions ---------- */
+const { sessionStorage } = require('node-sessionstorage');
 (function restoreTheme() {
-  const saved = localStorage.getItem('unblockedHubTheme');
+  const saved = sessionStorage.getItem('unblockedHubTheme');
   if (saved) {
     document.getElementById('theme-select').value = saved;
     changeTheme();
   }
 })();
-document.getElementById('theme-select')
-        .addEventListener('change', function () {
-          localStorage.setItem('unblockedHubTheme', this.value);
-        });
 
-/* ---------- Expose functions to the global scope ----------
-     (so the inline onclick attributes in index.html can call them)   */
-window.showTab   = showTab;
-window.loadGame  = loadGame;
-window.sendAI    = sendAI;
+document.getElementById('theme-select')
+  .addEventListener('change', function () {
+    sessionStorage.setItem('unblockedHubTheme', this.value);
+  });
+
+/* ---------- Expose functions to the global scope ---------- (so the inline onclick attributes in index.html can call them) */
+window.showTab = showTab;
+window.loadGame = loadGame;
+window.sendAI = sendAI;
 window.openProxy = openProxy;
 window.changeTheme = changeTheme;
