@@ -1,30 +1,56 @@
+// server.js  –  ESM (matches "type":"module" in package.json)
+import 'dotenv/config';
 import Fastify from 'fastify';
-import staticPlugin from '@fastify/static';
-import { createServer } from 'http';
-import { createBareServer } from '@mercuryworkshop/bare-server-node'; // or wisp
+import fastifyStatic from '@fastify/static';
+import { WebSocketServer } from 'ws';
+import { createWispServer } from 'wisp-server-node';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const app = Fastify();
-const PORT = process.env.PORT || 8080;
+const PORT      = process.env.PORT || 8080;
 
-await app.register(staticPlugin, {
-  root: path.join(__dirname, 'public'),
+// ─── Fastify ──────────────────────────────────────────────────────────────────
+const app = Fastify({ logger: false });
+
+// public/ → index.html, sw.js, register-sw.js, manifest.json …
+await app.register(fastifyStatic, {
+  root:   path.join(__dirname, 'public'),
   prefix: '/',
 });
 
-const server = createServer(app.server ? undefined : app.callback?.());
+// Scramjet SW bundle → /scramjet/scramjet.sw.js etc.
+await app.register(fastifyStatic, {
+  root:          path.join(__dirname, 'node_modules/@mercuryworkshop/scramjet/dist'),
+  prefix:        '/scramjet/',
+  decorateReply: false,
+});
 
-// Wisp WebSocket handling (Scramjet's transport)
-import { WispServer } from '@mercuryworkshop/wisp-js/server';
-const wisp = new WispServer();
+// bare-mux worker → /baremux/worker.js
+await app.register(fastifyStatic, {
+  root:          path.join(__dirname, 'node_modules/@mercuryworkshop/bare-mux/dist'),
+  prefix:        '/baremux/',
+  decorateReply: false,
+});
 
+// libcurl transport → /libcurl/index.mjs
+await app.register(fastifyStatic, {
+  root:          path.join(__dirname, 'node_modules/@mercuryworkshop/libcurl-transport/dist'),
+  prefix:        '/libcurl/',
+  decorateReply: false,
+});
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+await app.listen({ port: PORT, host: '0.0.0.0' });
+
+// ─── Wisp WebSocket server (handles the actual TCP proxying) ──────────────────
 app.server.on('upgrade', (req, socket, head) => {
   if (req.url.startsWith('/wisp/')) {
-    wisp.handleUpgrade(req, socket, head);
+    createWispServer({ server: app.server })(req, socket, head);
+  } else {
+    socket.destroy();
   }
 });
 
-await app.listen({ port: PORT });
-console.log(`Listening on http://localhost:${PORT}`);
+console.log(`🚀  Server running  →  http://localhost:${PORT}`);
+console.log(`🔌  Wisp endpoint   →  ws://localhost:${PORT}/wisp/`);
