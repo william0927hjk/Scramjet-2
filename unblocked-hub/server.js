@@ -1,4 +1,4 @@
-// server.js  –  ESM (matches "type":"module" in package.json)
+// server.js – ESM, Node 24+
 import 'dotenv/config';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
@@ -8,68 +8,67 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT      = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
-// ─── Resolve scramjet dist path (handles different package layouts) ───────────
-const scramjetBase = path.join(__dirname, 'node_modules/@mercuryworkshop/scramjet');
-let scramjetDist = path.join(scramjetBase, 'dist');
-if (!fs.existsSync(scramjetDist)) {
-  // Some releases use /build instead of /dist
-  scramjetDist = path.join(scramjetBase, 'build');
+// Helper: find the right subfolder inside a package
+function pkgDir(pkg, ...candidates) {
+  const base = path.join(__dirname, 'node_modules', pkg);
+  for (const c of candidates) {
+    const p = c ? path.join(base, c) : base;
+    if (fs.existsSync(p)) return p;
+  }
+  // fallback: package root
+  return base;
 }
-if (!fs.existsSync(scramjetDist)) {
-  // Flat layout — assets directly in package root
-  scramjetDist = scramjetBase;
-}
-console.log('📦 Scramjet assets →', scramjetDist);
-console.log('   Contents:', fs.readdirSync(scramjetDist).join(', '));
+
+const scramjetDist  = pkgDir('@mercuryworkshop/scramjet',          'dist', 'build', '');
+const baremuxDist   = pkgDir('@mercuryworkshop/bare-mux',          'dist', '');
+const libcurlDist   = pkgDir('@mercuryworkshop/libcurl-transport', 'dist', '');
+
+console.log('scramjet →', scramjetDist,  '|', fs.readdirSync(scramjetDist).join(', '));
+console.log('bare-mux →', baremuxDist,   '|', fs.readdirSync(baremuxDist).join(', '));
+console.log('libcurl  →', libcurlDist,   '|', fs.readdirSync(libcurlDist).join(', '));
 
 // ─── Fastify ──────────────────────────────────────────────────────────────────
 const app = Fastify({ logger: false });
 
-// Scramjet SW bundle → /scramjet/scramjet.sw.js etc.
-// Must be registered BEFORE the public catch-all so /scramjet/* hits this first.
+// Asset routes – registered BEFORE the public catch-all
 await app.register(fastifyStatic, {
-  root:          scramjetDist,
-  prefix:        '/scramjet/',
+  root: scramjetDist,
+  prefix: '/scramjet/',
   decorateReply: false,
 });
 
-// bare-mux worker → /baremux/worker.js
 await app.register(fastifyStatic, {
-  root:          path.join(__dirname, 'node_modules/@mercuryworkshop/bare-mux/dist'),
-  prefix:        '/baremux/',
+  root: baremuxDist,
+  prefix: '/baremux/',
   decorateReply: false,
 });
 
-// libcurl transport → /libcurl/index.mjs
 await app.register(fastifyStatic, {
-  root:          path.join(__dirname, 'node_modules/@mercuryworkshop/libcurl-transport/dist'),
-  prefix:        '/libcurl/',
+  root: libcurlDist,
+  prefix: '/libcurl/',
   decorateReply: false,
 });
 
-// public/ → index.html, sw.js, register-sw.js, manifest.json …
-// Registered LAST so it acts as the catch-all.
+// public/ – last, acts as catch-all for /, /sw.js, /manifest.json etc.
 await app.register(fastifyStatic, {
-  root:          path.join(__dirname, 'public'),
-  prefix:        '/',
+  root: path.join(__dirname, 'public'),
+  prefix: '/',
   decorateReply: false,
 });
 
-// ─── Catch-all: any unmatched route serves index.html ─────────────────────────
-// This is critical — when the Scramjet SW intercepts /scramjet/<encoded-url>,
-// it never actually hits the server. But if the SW isn't active yet (first load,
-// hard refresh), the browser sends a real GET. Return index.html so the page
-// loads, the SW registers, and then the SW handles it from there.
-app.setNotFoundHandler((req, reply) => {
+// ─── Catch-all SPA fallback ───────────────────────────────────────────────────
+// Any URL the SW hasn't intercepted yet (first load / hard refresh) gets
+// index.html so the page loads, the SW activates, then handles it itself.
+app.setNotFoundHandler((_req, reply) => {
   reply.sendFile('index.html', path.join(__dirname, 'public'));
 });
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
-// ─── Wisp WebSocket server ────────────────────────────────────────────────────
+// Wisp WS upgrade – attach AFTER listen so app.server exists
 app.server.on('upgrade', (req, socket, head) => {
   if (req.url.startsWith('/wisp/')) {
     wisp.routeRequest(req, socket, head);
@@ -78,5 +77,5 @@ app.server.on('upgrade', (req, socket, head) => {
   }
 });
 
-console.log(`🚀  Server running  →  http://localhost:${PORT}`);
-console.log(`🔌  Wisp endpoint   →  ws://localhost:${PORT}/wisp/`);
+console.log(`🚀 http://localhost:${PORT}`);
+console.log(`🔌 ws://localhost:${PORT}/wisp/`);
