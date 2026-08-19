@@ -1,21 +1,18 @@
-// src/index.js  –  Scramjet client bootstrap (loaded as type="module")
-// Initialises bare-mux with the libcurl transport pointing at our Wisp server.
+// public/src/index.js – Scramjet client bootstrap (type="module")
+// Initialises bare-mux with the libcurl.js WASM transport.
+// This runs once per page load; the SW handles all subsequent fetches.
 
-import { BareMux } from '/baremux/index.js';
-import { LibcurlConnection } from '/libcurl/index.js';
+import { BareMuxConnection } from '/baremux/index.js';
 
-// Wisp endpoint – same origin, so derive it from the current location
 const wispUrl =
   (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-  location.host +
-  '/wisp/';
+  location.host + '/wisp/';
 
-const mux = new BareMux('/baremux/worker.js');
+const conn = new BareMuxConnection('/baremux/worker.js');
 
-// Only set the transport once; skip if a SW from a previous page load
-// already set it.
-const existing = await mux.getTransport();
-if (!existing) {
-  await mux.setTransport('/libcurl/index.mjs', [{ wisp: wispUrl }]);
-  console.log('✅ bare-mux transport set → libcurl via', wispUrl);
+// Only set transport if not already configured (avoids redundant WASM loads)
+const current = await conn.getTransport();
+if (!current || current === '') {
+  await conn.setTransport('/libcurl/index.mjs', [{ wisp: wispUrl }]);
+  console.log('✅ bare-mux → libcurl via', wispUrl);
 }
