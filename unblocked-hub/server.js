@@ -8,11 +8,9 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT      = process.env.PORT || 8080;
-const PUBLIC    = path.join(__dirname, 'public');
-const INDEX     = path.join(PUBLIC, 'index.html');
+const PORT = process.env.PORT || 8080;
+const PUBLIC = path.join(__dirname, 'public');
 
-// Helper: find the right subfolder inside a package
 function pkgDir(pkg, ...candidates) {
   const base = path.join(__dirname, 'node_modules', pkg);
   for (const c of candidates) {
@@ -22,50 +20,48 @@ function pkgDir(pkg, ...candidates) {
   return base;
 }
 
-const scramjetDist = pkgDir('@mercuryworkshop/scramjet',          'dist', 'build', '');
-const baremuxDist  = pkgDir('@mercuryworkshop/bare-mux',          'dist', '');
-const libcurlDist  = pkgDir('@mercuryworkshop/libcurl-transport', 'dist', '');
+const scramjetDist = pkgDir('@mercuryworkshop/scramjet', 'dist', 'build', '');
+const baremuxDist = pkgDir('@mercuryworkshop/bare-mux', 'dist', '');
+const libcurlDist = pkgDir('@mercuryworkshop/libcurl-transport', 'dist', '');
 
 console.log('scramjet →', scramjetDist, '\n  ', fs.readdirSync(scramjetDist).join(', '));
-console.log('bare-mux →', baremuxDist,  '\n  ', fs.readdirSync(baremuxDist).join(', '));
-console.log('libcurl  →', libcurlDist,  '\n  ', fs.readdirSync(libcurlDist).join(', '));
+console.log('bare-mux →', baremuxDist, '\n  ', fs.readdirSync(baremuxDist).join(', '));
+console.log('libcurl  →', libcurlDist, '\n  ', fs.readdirSync(libcurlDist).join(', '));
 
-// ─── Fastify ──────────────────────────────────────────────────────────────────
-const app = Fastify({ logger: false });
+const app = Fastify({ logger: true });
 
-// First registration decorates reply (sendFile becomes available)
 await app.register(fastifyStatic, {
-  root:   PUBLIC,
+  root: PUBLIC,
   prefix: '/',
 });
 
-// Subsequent registrations must set decorateReply: false
 await app.register(fastifyStatic, {
-  root:          scramjetDist,
-  prefix:        '/scramjet/',
+  root: scramjetDist,
+  prefix: '/scramjet/',
   decorateReply: false,
 });
 
 await app.register(fastifyStatic, {
-  root:          baremuxDist,
-  prefix:        '/baremux/',
+  root: baremuxDist,
+  prefix: '/baremux/',
   decorateReply: false,
 });
 
 await app.register(fastifyStatic, {
-  root:          libcurlDist,
-  prefix:        '/libcurl/',
+  root: libcurlDist,
+  prefix: '/libcurl/',
   decorateReply: false,
 });
 
-// ─── Catch-all: return index.html for any unmatched route ────────────────────
-// Covers the case where the SW hasn't activated yet and the browser sends
-// a real GET for /scramjet/<encoded-url> or any other client-side route.
-app.setNotFoundHandler((_req, reply) => {
-  reply.sendFile('index.html');
+// SPA fallback only for document navigation, never for missing JS/WASM/assets.
+app.setNotFoundHandler((req, reply) => {
+  const accept = req.headers.accept || '';
+  if (accept.includes('text/html')) {
+    return reply.type('text/html').sendFile('index.html');
+  }
+  return reply.code(404).type('text/plain').send('Not found');
 });
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
 app.server.on('upgrade', (req, socket, head) => {
