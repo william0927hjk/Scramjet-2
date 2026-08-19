@@ -2,321 +2,262 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Student Dashboard - Learning Hub</title>
+<title>Student Dashboard – Learning Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
 
-<!-- Cloak Favicon -->
-<link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>">
+<!-- Cloak favicon (changes when tab is hidden) -->
+<link id="favicon" rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>">
 
+<!-- ---------- ALL CSS IN ONE PLACE ---------- -->
 <style>
 :root {
     --bg: #f0f2f5;
-    --bg-gradient: #ffffff;
     --txt: #1a1a1a;
-    --card: rgba(255, 255, 255, 0.9);
+    --card: rgba(255,255,255,.95);
     --accent: #1a73e8;
     --accent-hover: #1557b0;
-    --border: rgba(0, 0, 0, 0.1);
+    --border: rgba(0,0,0,.1);
 }
 
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    font-family: system-ui, -apple-system, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--txt);
-    min-height: 100vh;
-    overflow-x: hidden;
+/* Reset & layout */
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    min-height:100vh;
+    overflow-x:hidden;
+}
+#snowCanvas{
+    position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;
+    background:linear-gradient(to bottom,#e6e9f0,#f0f2f5);
 }
 
-#snowCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background: linear-gradient(to bottom, #e6e9f0, #f0f2f5);
+/* Nav */
+nav{
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(10px);
+    padding:1rem 2rem;
+    display:flex;justify-content:space-between;align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+    position:sticky;top:0;z-index:100;
+}
+nav h1{margin:0;font-size:1.5rem;color:var(--accent)}
+nav .nav-buttons{display:flex;gap:1rem}
+nav button{
+    background:none;border:1px solid transparent;
+    color:var(--txt);font-size:1rem;cursor:pointer;
+    padding:.5rem 1rem;border-radius:.5rem;
+    transition:all .3s ease;
+}
+nav button:hover{
+    color:var(--accent);
+    background:rgba(26,115,232,.1);
+    border-color:var(--border);
+}
+nav button.active-tab{
+    background:var(--accent);
+    color:#fff;
 }
 
-nav {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+/* Container & cards */
+.container{max-width:1200px;margin:auto;padding:2rem 1rem}
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:1rem;
+    padding:2rem;
+    margin-bottom:2rem;
+    display:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.05);
+    animation:fadeIn .5s ease-in-out;
+}
+.card.active{display:block}
+@keyframes fadeIn{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
 }
 
-nav h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--accent);
+/* Form elements */
+input,textarea,select{
+    width:100%;padding:.8rem;margin:.5rem 0;
+    border:1px solid var(--border);border-radius:.5rem;
+    background:#fff;color:var(--txt);font-size:1rem;
+    transition:border-color .3s ease;
+}
+input:focus,textarea:focus,select:focus{
+    outline:none;border-color:var(--accent);
+}
+button.action{
+    background:var(--accent);color:#fff;border:none;
+    border-radius:.5rem;padding:.8rem 1.5rem;
+    cursor:pointer;font-weight:bold;font-size:1rem;
+    transition:all .3s ease;
+}
+button.action:hover{
+    background:var(--accent-hover);
+    transform:translateY(-2px);
 }
 
-nav .nav-buttons {
-    display: flex;
-    gap: 1rem;
+/* Module grid */
+.module-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:1rem;
+}
+.module-item{
+    background:#fff;padding:1rem;text-align:center;
+    border-radius:.8rem;cursor:pointer;
+    border:1px solid var(--border);font-weight:500;
+    transition:all .3s ease;
+}
+.module-item:hover{
+    background:rgba(26,115,232,.05);
+    transform:scale(1.05);
+    border-color:var(--accent);
+    color:var(--accent);
 }
 
-nav button {
-    background: none;
-    border: 1px solid transparent;
-    color: var(--txt);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
+/* Iframes & AI output */
+iframe{
+    width:100%;border:none;border-radius:.8rem;
+    margin-top:1.5rem;background:#fff;
+}
+#ai-output{
+    min-height:250px;background:#fff;padding:1.5rem;
+    border-radius:.8rem;overflow-y:auto;margin-bottom:1rem;
+    border:1px solid var(--border);line-height:1.6;
 }
 
-nav button:hover {
-    color: var(--accent);
-    background: rgba(26, 115, 232, 0.1);
-    border-color: var(--border);
+/* Viewer form */
+.viewer-form{
+    display:flex;gap:10px;margin-bottom:20px;
 }
+.viewer-form input{margin:0}
 
-nav button.active-tab {
-    background: var(--accent);
-    color: white;
-}
-
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 2rem 1rem;
-}
-
-.card {
-    background: var(--card);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    display: none;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-.card.active { display: block; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-input, textarea, select {
-    width: 100%;
-    padding: .8rem;
-    margin: .5rem 0;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--txt);
-    border-radius: .5rem;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-input:focus, textarea:focus, select:focus {
-    outline: none;
-    border-color: var(--accent);
-}
-
-button.action {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: .5rem;
-    padding: .8rem 1.5rem;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-button.action:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.module-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-}
-
-.module-item {
-    background: #fff;
-    padding: 1rem;
-    text-align: center;
-    border-radius: .8rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border);
-    font-weight: 500;
-}
-
-.module-item:hover {
-    background: rgba(26, 115, 232, 0.05);
-    transform: scale(1.05);
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-iframe {
-    width: 100%;
-    border: none;
-    border-radius: .8rem;
-    margin-top: 1.5rem;
-    background: #fff;
-}
-
-#ai-output {
-    min-height: 250px;
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: .8rem;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    border: 1px solid var(--border);
-    line-height: 1.6;
-}
-
-.viewer-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.viewer-form input {
-    margin: 0;
-}
-
-@media (max-width: 768px) {
-    nav {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    nav .nav-buttons {
-        width: 100%;
-        justify-content: space-around;
-        flex-wrap: wrap;
-    }
-    nav button {
-        padding: 0.5rem;
-    }
-    .viewer-form {
-        flex-direction: column;
-    }
+/* Responsive tweaks */
+@media(max-width:768px){
+    nav{flex-direction:column;gap:1rem;padding:1rem}
+    nav .nav-buttons{width:100%;justify-content:space-around;flex-wrap:wrap}
+    .viewer-form{flex-direction:column}
 }
 </style>
 </head>
 
 <body>
 
-<!-- Snow Canvas Background -->
+<!-- Snow canvas (particles are drawn here) -->
 <canvas id="snowCanvas"></canvas>
 
 <nav>
     <h1>📚 Student Hub</h1>
     <div class="nav-buttons">
-        <button id="tab-modules" onclick="showTab('modules', this)">Modules</button>
-        <button id="tab-ai" onclick="showTab('ai', this)">AI Tutor</button>
-        <button id="tab-viewer" onclick="showTab('viewer', this)">Web Viewer</button>
-        <button id="tab-settings" onclick="showTab('settings', this)">Settings</button>
+        <button id="tab-modules" onclick="showTab('modules',this)">Modules</button>
+        <button id="tab-ai"      onclick="showTab('ai',this)">AI Tutor</button>
+        <button id="tab-viewer"  onclick="showTab('viewer',this)">Web Viewer</button>
+        <button id="tab-settings"onclick="showTab('settings',this)">Settings</button>
     </div>
 </nav>
 
 <div class="container">
 
-    <!-- MODULES -->
+    <!-- ==== MODULES ==== -->
     <section id="modules" class="card active">
         <h2>Interactive Learning Modules</h2>
         <p>Select a module to begin your interactive session.</p>
 
         <div class="module-grid">
-            <div class="module-item" onclick="loadModule('https://rawcdn.githack.com/wayou/awesome-github-profile-readme/6c2e3c8d/2048/2048.html')">Module 1: Math Logic</div>
-            <div class="module-item" onclick="loadModule('https://rawcdn.githack.com/chenmiao/awesome-javascript/4c6d5c3c/snake/index.html')">Module 2: Spatial Reasoning</div>
-            <div class="module-item" onclick="loadModule('https://rawcdn.githack.com/CodeNerve/HTML-5-Tetris/master/tetris.html')">Module 3: Geometry</div>
-            <div class="module-item" onclick="loadModule('https://rawcdn.githack.com/ggbaker/2048-clone/master/index.html')">Module 4: Problem Solving</div>
+            <div class="module-item"
+                 onclick="loadModule('https://rawcdn.githack.com/wayou/awesome-github-profile-readme/6c2e3c8d/2048/2048.html')">
+                Module 1 – Math Logic
+            </div>
+            <div class="module-item"
+                 onclick="loadModule('https://rawcdn.githack.com/chenmiao/awesome-javascript/4c6d5c3c/snake/index.html')">
+                Module 2 – Spatial Reasoning
+            </div>
+            <div class="module-item"
+                 onclick="loadModule('https://rawcdn.githack.com/CodeNerve/HTML-5-Tetris/master/tetris.html')">
+                Module 3 – Geometry
+            </div>
+            <div class="module-item"
+                 onclick="loadModule('https://rawcdn.githack.com/ggbaker/2048-clone/master/index.html')">
+                Module 4 – Problem Solving
+            </div>
         </div>
 
         <iframe id="moduleFrame" style="display:none;height:600px;"></iframe>
     </section>
 
-    <!-- AI TUTOR -->
+    <!-- ==== AI TUTOR ==== -->
     <section id="ai" class="card">
         <h2>AI Writing Assistant</h2>
-        <div id="ai-output">Welcome to the AI Tutor. Type a prompt below to begin...</div>
-        <textarea id="ai-input" rows="3" placeholder="Ask a question or start a story..."></textarea>
+        <div id="ai-output">Welcome! Type a prompt below to start.</div>
+        <textarea id="ai-input" rows="3"
+                  placeholder="Ask a question, request a summary, etc."></textarea>
         <button class="action" onclick="sendAI()">Submit Prompt</button>
     </section>
 
-    <!-- WEB VIEWER -->
+    <!-- ==== WEB VIEWER ==== -->
     <section id="viewer" class="card">
         <h2>Educational Web Viewer</h2>
-        <p>Enter a URL to view educational resources.</p>
-        
+        <p>Enter a URL (e.g., wikipedia.org) to view the page inside the app.</p>
+
         <form class="viewer-form" onsubmit="openViewer(event)">
-            <input id="viewer-url" type="text" placeholder="Enter URL (e.g., wikipedia.org)" required>
+            <input id="viewer-url" type="text"
+                   placeholder="Enter URL (no https:// needed)" required>
             <button class="action" type="submit">View Resource</button>
         </form>
 
         <iframe id="viewerFrame" style="display:none;height:700px;"></iframe>
     </section>
 
-    <!-- SETTINGS -->
+    <!-- ==== SETTINGS ==== -->
     <section id="settings" class="card">
         <h2>Options & Settings</h2>
 
         <label for="theme-select">Theme:</label>
         <select id="theme-select" onchange="changeTheme()">
-            <option value="light" selected>Light (Default)</option>
+            <option value="light" selected>Light (default)</option>
             <option value="dark">Dark</option>
         </select>
 
-        <hr style="margin:1.5rem 0; border-color: var(--border);">
+        <hr style="margin:1.5rem 0; border-color:var(--border)">
 
         <p><strong>Quick notes:</strong></p>
         <ul>
-            <li>Modules load in a sandboxed frame for safe interaction.</li>
-            <li>The AI endpoint uses OpenAI if you supplied an <code>OPENAI_API_KEY</code> in <code>.env</code>.</li>
-            <li>The Web Viewer works by encoding the destination URL and sending it to <code>/viewer/&lt;url-encoded&gt;</code>.</li>
+            <li>Modules load in a sandboxed <code>iframe</code> for safety.</li>
+            <li>The AI button currently shows a mock response. Hook it up to your
+                backend (OpenAI, Claude, etc.) for real answers.</li>
+            <li>The viewer encodes the URL and forwards it to <code>/viewer/:encoded</code>
+                on your server.</li>
         </ul>
     </section>
 
 </div>
 
-<!-- Register Service Worker -->
+<!-- ---------- SERVICE WORKER & UI LOGIC ---------- -->
 <script src="/register-sw.js"></script>
-
-<!-- Load UI logic -->
 <script type="module" src="/src/index.js"></script>
 
-<!-- ALL JAVASCRIPT COMBINED HERE -->
+<!-- ---------- EVERYTHING ELSE (JS) IN ONE BLOCK ---------- -->
 <script>
-// --- Onload Protection ---
-window.addEventListener('beforeunload', function (e) {
-    e.preventDefault(); 
+// ---------- 1️⃣ PROTECTION (before‑unload) ----------
+window.addEventListener('beforeunload', e => {
+    e.preventDefault();
     e.returnValue = 'You have unsaved work. Are you sure you want to leave?';
     return e.returnValue;
 });
 
-// --- Tab Cloaking ---
-const originalTitle = "Student Dashboard - Learning Hub";
-const hiddenTitle = "Google Classroom";
+// ---------- 2️⃣ TAB CLOAKING ----------
+const originalTitle = "Student Dashboard – Learning Hub";
+const hiddenTitle   = "Google Classroom";
 const visibleFavicon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>";
 const hiddenFavicon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%234285F4' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>";
 
-document.addEventListener('visibilitychange', function() {
+document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         document.title = hiddenTitle;
         document.getElementById('favicon').href = hiddenFavicon;
@@ -326,129 +267,116 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// --- Snow Effect ---
-const canvas = document.getElementById("snowCanvas");
-const ctx = canvas.getContext("2d");
+// ---------- 3️⃣ SNOW PARTICLES ----------
+const canvas = document.getElementById('snowCanvas');
+const ctx    = canvas.getContext('2d');
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
+    canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
 
 const snowflakes = [];
-const maxSnowflakes = 100;
+const MAX = 100;                     // feel free to bump this up/down
 
-function createSnowflakes() {
+function initSnow() {
     snowflakes.length = 0;
-    for (let i = 0; i < maxSnowflakes; i++) {
+    for (let i = 0; i < MAX; i++) {
         snowflakes.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
             radius: Math.random() * 3 + 1,
-            density: Math.random() * 4 + 1,
             speedX: Math.random() * 1 - 0.5,
             speedY: Math.random() * 1.5 + 0.5
         });
     }
 }
-createSnowflakes();
+initSnow();
 
 function drawSnow() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(169, 169, 169, 0.6)";
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(169,169,169,0.6)";
     ctx.beginPath();
-    
-    for (let i = 0; i < snowflakes.length; i++) {
-        let sf = snowflakes[i];
-        ctx.moveTo(sf.x, sf.y);
-        ctx.arc(sf.x, sf.y, sf.radius, 0, Math.PI * 2);
-
-        sf.y += sf.speedY;
-        sf.x += sf.speedX;
-
-        if (sf.y > canvas.height) {
-            sf.y = -5;
-            sf.x = Math.random() * canvas.width;
-        }
-        if (sf.x > canvas.width) sf.x = 0;
-        if (sf.x < 0) sf.x = canvas.width;
+    for (let s of snowflakes) {
+        ctx.moveTo(s.x, s.y);
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI*2);
+        s.x += s.speedX;
+        s.y += s.speedY;
+        if (s.y > canvas.height) { s.y = -5; s.x = Math.random()*canvas.width; }
+        if (s.x > canvas.width)  s.x = 0;
+        if (s.x < 0)             s.x = canvas.width;
     }
     ctx.fill();
     requestAnimationFrame(drawSnow);
 }
 drawSnow();
 
-// --- Tab Switching ---
-function showTab(tabId, element) {
-    document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+// ---------- 4️⃣ TAB SWITCHING ----------
+function showTab(tabId, el) {
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    
-    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-tab'));
-    if(element) element.classList.add('active-tab');
+
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active-tab'));
+    if (el) el.classList.add('active-tab');
 }
 document.getElementById('tab-modules').classList.add('active-tab');
 
-// --- Viewer Logic ---
-function openViewer(event) {
-    if(event) event.preventDefault(); 
-    let url = document.getElementById('viewer-url').value.trim();
-    if (!url) return;
-
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-    }
-
-    const encodedUrl = encodeURIComponent(url);
-    const viewerPath = `/viewer/${encodedUrl}`;
-    
-    const viewerFrame = document.getElementById('viewerFrame');
-    viewerFrame.src = viewerPath;
-    viewerFrame.style.display = 'block';
-}
-
-// --- Module Loader ---
+// ---------- 5️⃣ MODULE LOADER ----------
 function loadModule(url) {
-    const moduleFrame = document.getElementById('moduleFrame');
-    moduleFrame.src = url;
-    moduleFrame.style.display = 'block';
+    const f = document.getElementById('moduleFrame');
+    f.src = url;
+    f.style.display = 'block';
 }
 
-// --- Theme Toggle ---
+// ---------- 6️⃣ WEB VIEWER ----------
+function openViewer(e) {
+    if (e) e.preventDefault();
+    let u = document.getElementById('viewer-url').value.trim();
+    if (!u) return;
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    const encoded = encodeURIComponent(u);
+    const path = `/viewer/${encoded}`;
+    const f = document.getElementById('viewerFrame');
+    f.src = path;
+    f.style.display = 'block';
+}
+
+// ---------- 7️⃣ THEME TOGGLE ----------
 function changeTheme() {
-    const theme = document.getElementById('theme-select').value;
-    if (theme === 'dark') {
+    const sel = document.getElementById('theme-select').value;
+    if (sel === 'dark') {
         document.documentElement.style.setProperty('--bg', '#121212');
         document.documentElement.style.setProperty('--txt', '#ffffff');
-        document.documentElement.style.setProperty('--card', 'rgba(30, 30, 30, 0.85)');
+        document.documentElement.style.setProperty('--card', 'rgba(30,30,30,.85)');
         document.documentElement.style.setProperty('--accent', '#00ffcc');
         document.documentElement.style.setProperty('--accent-hover', '#00e6b8');
-        document.documentElement.style.setProperty('--border', 'rgba(255, 255, 255, 0.1)');
-        canvas.style.background = 'linear-gradient(to bottom, #0a0a0f, #121212)';
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        document.documentElement.style.setProperty('--border', 'rgba(255,255,255,.1)');
+        canvas.style.background = 'linear-gradient(to bottom,#0a0a0f,#121212)';
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
     } else {
         document.documentElement.style.setProperty('--bg', '#f0f2f5');
         document.documentElement.style.setProperty('--txt', '#1a1a1a');
-        document.documentElement.style.setProperty('--card', 'rgba(255, 255, 255, 0.95)');
+        document.documentElement.style.setProperty('--card', 'rgba(255,255,255,.95)');
         document.documentElement.style.setProperty('--accent', '#1a73e8');
         document.documentElement.style.setProperty('--accent-hover', '#1557b0');
-        document.documentElement.style.setProperty('--border', 'rgba(0, 0, 0, 0.1)');
-        canvas.style.background = 'linear-gradient(to bottom, #e6e9f0, #f0f2f5)';
-        ctx.fillStyle = "rgba(169, 169, 169, 0.6)";
+        document.documentElement.style.setProperty('--border', 'rgba(0,0,0,.1)');
+        canvas.style.background = 'linear-gradient(to bottom,#e6e9f0,#f0f2f5)';
+        ctx.fillStyle = "rgba(169,169,169,0.6)";
     }
 }
 
-// --- AI Mock Logic ---
+// ---------- 8️⃣ AI MOCK (replace with real API later) ----------
 function sendAI() {
-    const input = document.getElementById('ai-input').value;
-    const output = document.getElementById('ai-output');
-    if (input.trim() === '') return;
-    
-    output.innerHTML = "Processing prompt: <i>" + input + "</i>...<br><br>Connecting to educational API...";
-    
+    const prompt = document.getElementById('ai-input').value.trim();
+    const out    = document.getElementById('ai-output');
+    if (!prompt) return;
+    out.innerHTML = `<em>Processing…</em> <br><br>Prompt: <strong>${prompt}</strong>`;
+    // Simulated delay
     setTimeout(() => {
-        output.innerHTML += "<br><br>Response: This is a simulated response. Ensure your backend API key is configured to enable live AI.";
+        out.innerHTML += `<br><br><strong>Response:</strong> This is a placeholder answer.
+        Connect your backend (OpenAI, Claude, etc.) to get live results.`;
     }, 1500);
 }
 </script>
