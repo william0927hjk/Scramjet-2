@@ -5,7 +5,7 @@
   "type": "module",
   "engines": {
     "npm": ">=7.0.0",
-    "node": ">=26.7.0"
+    "node": ">=24.14.0"
   },
   "scripts": {
     "start": "node src/index.js",
@@ -13,7 +13,9 @@
     "lint": "eslint ./src/",
     "lint:fix": "eslint ./src/ --fix"
   },
-  "keywords": ["proxy"],
+  "keywords": [
+    "learning"
+  ],
   "author": "Mercury Workshop",
   "license": "GNU AFFERO",
   "dependencies": {
@@ -24,6 +26,7 @@
     "@mercuryworkshop/wisp-js": "^0.4.1",
     "dotenv": "^17.4.2",
     "fastify": "^5.7.4",
+    "node-sessionstorage": "^1.0.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
