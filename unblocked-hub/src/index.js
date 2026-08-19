@@ -3,8 +3,7 @@ import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { scramjetPath } from '@mercuryworkshop/scramjet/path';
-import WispServer from '@mercuryworkshop/wisp-js/server'; // Changed to default import
-import { WebSocketServer } from 'ws';
+import { server as wisp } from '@mercuryworkshop/wisp-js/server'; // Correct named import syntax
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,31 +25,17 @@ fastify.register(fastifyStatic, {
     decorateReply: false, 
 });
 
-// 3. Set up the WebSocket Server for Wisp/Proxy traffic
-fastify.ready((err) => {
-    if (err) throw err;
-
-    const wss = new WebSocketServer({ server: fastify.server });
-
-    wss.on('connection', (ws, req) => {
-        // Fallback check to handle both factory methods or raw initialization 
-        if (typeof WispServer === 'function') {
-            new WispServer(ws, req);
-        } else if (WispServer && typeof WispServer.wispServerFactory === 'function') {
-            WispServer.wispServerFactory(ws, req);
-        } else {
-            console.error('Could not map the exact WispServer initialization routine.');
-        }
-        
-        ws.on('error', (error) => console.error('WebSocket Error:', error));
-    });
-});
-
-// 4. Run the server on Render's specified port
+// 3. Set up the server on Render's specified port
 const start = async () => {
     try {
         await fastify.listen({ port: parseInt(port), host: '0.0.0.0' });
         console.log(`Scramjet demo running at http://0.0.0:${port}`);
+
+        // 4. Attach Wisp route handling to the native HTTP server upgrade hook
+        fastify.server.on('upgrade', (req, socket, head) => {
+            wisp.routeRequest(req, socket, head);
+        });
+
     } catch (err) {
         fastify.log.error(err);
         process.exit(1);
