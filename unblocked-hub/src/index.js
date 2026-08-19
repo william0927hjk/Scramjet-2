@@ -70,24 +70,9 @@ function escapeHTML(str) {
   return div.innerHTML;
 }
 
-// Remove the import statement
-// import { sessionStorage } from 'node-sessionstorage';
-
-// Use the sessionStorage object directly
-// (function restoreTheme() {
-//   const saved = sessionStorage.getItem('unblockedHubTheme');
-//   if (saved) {
-//     document.getElementById('theme-select').value = saved;
-//     changeTheme();
-//   }
-// })();
-// document.getElementById('theme-select').addEventListener('change', function () {
-//   sessionStorage.setItem('unblockedHubTheme', this.value);
-// });
-
-/* ---------- Expose functions to the global scope ---------- (so the inline onclick attributes in index.html can call them) */
-window.showTab = showTab;
-window.loadGame = loadGame;
-window.sendAI = sendAI;
-window.openProxy = openProxy;
-window.changeTheme = changeTheme;
+// Remove the lines that are trying to access the window object
+// window.showTab = showTab;
+// window.loadGame = loadGame;
+// window.sendAI = sendAI;
+// window.openProxy = openProxy;
+// window.changeTheme = changeTheme;
