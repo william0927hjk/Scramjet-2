@@ -10,7 +10,6 @@
 <link id="favicon" rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>">
 
-<!-- ---------- ALL CSS IN ONE PLACE ---------- -->
 <style>
 :root {
     --bg: #f0f2f5;
@@ -21,7 +20,6 @@
     --border: rgba(0,0,0,.1);
 }
 
-/* Reset & layout */
 *{box-sizing:border-box}
 body{
     margin:0;
@@ -81,7 +79,6 @@ nav button.active-tab{
     to{opacity:1;transform:translateY(0)}
 }
 
-/* Form elements */
 input,textarea,select{
     width:100%;padding:.8rem;margin:.5rem 0;
     border:1px solid var(--border);border-radius:.5rem;
@@ -102,7 +99,6 @@ button.action:hover{
     transform:translateY(-2px);
 }
 
-/* Module grid */
 .module-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
@@ -121,7 +117,6 @@ button.action:hover{
     color:var(--accent);
 }
 
-/* Iframes & AI output */
 iframe{
     width:100%;border:none;border-radius:.8rem;
     margin-top:1.5rem;background:#fff;
@@ -132,13 +127,22 @@ iframe{
     border:1px solid var(--border);line-height:1.6;
 }
 
-/* Viewer form */
 .viewer-form{
     display:flex;gap:10px;margin-bottom:20px;
 }
 .viewer-form input{margin:0}
 
-/* Responsive tweaks */
+/* Status badge shown while SW is loading */
+#sw-status{
+    font-size:.8rem;
+    padding:.3rem .7rem;
+    border-radius:2rem;
+    background:rgba(0,0,0,.06);
+    color:#666;
+    display:inline-block;
+    margin-bottom:1rem;
+}
+
 @media(max-width:768px){
     nav{flex-direction:column;gap:1rem;padding:1rem}
     nav .nav-buttons{width:100%;justify-content:space-around;flex-wrap:wrap}
@@ -149,49 +153,42 @@ iframe{
 
 <body>
 
-<!-- Snow canvas (particles are drawn here) -->
 <canvas id="snowCanvas"></canvas>
 
 <nav>
     <h1>📚 Student Hub</h1>
     <div class="nav-buttons">
-        <button id="tab-modules" onclick="showTab('modules',this)">Modules</button>
-        <button id="tab-ai"      onclick="showTab('ai',this)">AI Tutor</button>
-        <button id="tab-viewer"  onclick="showTab('viewer',this)">Web Viewer</button>
-        <button id="tab-settings"onclick="showTab('settings',this)">Settings</button>
+        <button id="tab-modules"  onclick="showTab('modules',this)">Modules</button>
+        <button id="tab-ai"       onclick="showTab('ai',this)">AI Tutor</button>
+        <button id="tab-viewer"   onclick="showTab('viewer',this)">Web Viewer</button>
+        <button id="tab-settings" onclick="showTab('settings',this)">Settings</button>
     </div>
 </nav>
 
 <div class="container">
 
-    <!-- ==== MODULES ==== -->
+    <!-- MODULES -->
     <section id="modules" class="card active">
         <h2>Interactive Learning Modules</h2>
         <p>Select a module to begin your interactive session.</p>
-
         <div class="module-grid">
-            <div class="module-item"
-                 onclick="loadModule('https://rawcdn.githack.com/wayou/awesome-github-profile-readme/6c2e3c8d/2048/2048.html')">
+            <div class="module-item" onclick="loadModule('https://play2048.co/')">
                 Module 1 – Math Logic
             </div>
-            <div class="module-item"
-                 onclick="loadModule('https://rawcdn.githack.com/chenmiao/awesome-javascript/4c6d5c3c/snake/index.html')">
+            <div class="module-item" onclick="loadModule('https://www.google.com/search?q=snake+game')">
                 Module 2 – Spatial Reasoning
             </div>
-            <div class="module-item"
-                 onclick="loadModule('https://rawcdn.githack.com/CodeNerve/HTML-5-Tetris/master/tetris.html')">
+            <div class="module-item" onclick="loadModule('https://tetris.com/play-tetris')">
                 Module 3 – Geometry
             </div>
-            <div class="module-item"
-                 onclick="loadModule('https://rawcdn.githack.com/ggbaker/2048-clone/master/index.html')">
+            <div class="module-item" onclick="loadModule('https://www.coolmathgames.com/0-2048')">
                 Module 4 – Problem Solving
             </div>
         </div>
-
         <iframe id="moduleFrame" style="display:none;height:600px;"></iframe>
     </section>
 
-    <!-- ==== AI TUTOR ==== -->
+    <!-- AI TUTOR -->
     <section id="ai" class="card">
         <h2>AI Writing Assistant</h2>
         <div id="ai-output">Welcome! Type a prompt below to start.</div>
@@ -200,21 +197,25 @@ iframe{
         <button class="action" onclick="sendAI()">Submit Prompt</button>
     </section>
 
-    <!-- ==== WEB VIEWER ==== -->
+    <!-- WEB VIEWER -->
     <section id="viewer" class="card">
         <h2>Educational Web Viewer</h2>
-        <p>Enter a URL (e.g., wikipedia.org) to view the page inside the app.</p>
+        <p>Enter any URL to view it through the proxy.</p>
+        <span id="sw-status">⏳ Waiting for proxy service worker…</span>
 
-        <form class="viewer-form" onsubmit="openViewer(event)">
+        <div class="viewer-form">
             <input id="viewer-url" type="text"
-                   placeholder="Enter URL (no https:// needed)" required>
-            <button class="action" type="submit">View Resource</button>
-        </form>
+                   placeholder="e.g. wikipedia.org or https://example.com">
+            <button class="action" onclick="openViewer()">View</button>
+        </div>
 
-        <iframe id="viewerFrame" style="display:none;height:700px;"></iframe>
+        <iframe id="viewerFrame" style="display:none;height:700px;"
+                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups
+                         allow-same-origin allow-scripts allow-top-navigation-by-user-activation">
+        </iframe>
     </section>
 
-    <!-- ==== SETTINGS ==== -->
+    <!-- SETTINGS -->
     <section id="settings" class="card">
         <h2>Options & Settings</h2>
 
@@ -224,50 +225,49 @@ iframe{
             <option value="dark">Dark</option>
         </select>
 
-        <hr style="margin:1.5rem 0; border-color:var(--border)">
-
-        <p><strong>Quick notes:</strong></p>
+        <hr style="margin:1.5rem 0;border-color:var(--border)">
+        <p><strong>How the proxy works:</strong></p>
         <ul>
-            <li>Modules load in a sandboxed <code>iframe</code> for safety.</li>
-            <li>The AI button currently shows a mock response. Hook it up to your
-                backend (OpenAI, Claude, etc.) for real answers.</li>
-            <li>The viewer encodes the URL and forwards it to <code>/viewer/:encoded</code>
-                on your server.</li>
+            <li>URLs are routed through a <strong>Scramjet v2</strong> service worker.</li>
+            <li>The Wisp WebSocket transport handles the actual network requests server-side.</li>
+            <li>Modules load in an iframe with a relaxed sandbox for interactivity.</li>
         </ul>
     </section>
 
 </div>
 
-<!-- ---------- SERVICE WORKER & UI LOGIC ---------- -->
+<!-- Register the service worker -->
 <script src="/register-sw.js"></script>
+
+<!-- Bootstrap bare-mux + libcurl transport (ESM) -->
 <script type="module" src="/src/index.js"></script>
 
-<!-- ---------- EVERYTHING ELSE (JS) IN ONE BLOCK ---------- -->
 <script>
-// ---------- 1️⃣ PROTECTION (before‑unload) ----------
+// ── 1. PROTECTION ───────────────────────────────────────────────────────────
 window.addEventListener('beforeunload', e => {
     e.preventDefault();
-    e.returnValue = 'You have unsaved work. Are you sure you want to leave?';
-    return e.returnValue;
+    e.returnValue = '';
+    return '';
 });
 
-// ---------- 2️⃣ TAB CLOAKING ----------
-const originalTitle = "Student Dashboard – Learning Hub";
-const hiddenTitle   = "Google Classroom";
-const visibleFavicon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231a73e8' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>";
-const hiddenFavicon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%234285F4' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>";
+// ── 2. TAB CLOAKING ──────────────────────────────────────────────────────────
+const originalTitle  = 'Student Dashboard – Learning Hub';
+const hiddenTitle    = 'Google Classroom';
+const fav            = document.getElementById('favicon');
+const visibleFavicon = fav.href;
+const hiddenFavicon  = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%234285F4' d='M12 3L1 9L4 10.5V17.5C4 18.88 6.5 20 12 20C17.5 20 20 18.88 20 17.5V10.5L23 9L12 3M12 5L17.5 7.5L12 10L6.5 7.5L12 5Z' /></svg>";
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         document.title = hiddenTitle;
-        document.getElementById('favicon').href = hiddenFavicon;
+        fav.href = hiddenFavicon;
     } else {
         document.title = originalTitle;
-        document.getElementById('favicon').href = visibleFavicon;
+        fav.href = visibleFavicon;
     }
 });
 
-// ---------- 3️⃣ SNOW PARTICLES ----------
+// ── 3. SNOW ───────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('snowCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -279,32 +279,26 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 const snowflakes = [];
-const MAX = 100;                     // feel free to bump this up/down
-
-function initSnow() {
-    snowflakes.length = 0;
-    for (let i = 0; i < MAX; i++) {
-        snowflakes.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            radius: Math.random() * 3 + 1,
-            speedX: Math.random() * 1 - 0.5,
-            speedY: Math.random() * 1.5 + 0.5
-        });
-    }
+for (let i = 0; i < 100; i++) {
+    snowflakes.push({
+        x:      Math.random() * canvas.width,
+        y:      Math.random() * canvas.height,
+        radius: Math.random() * 3 + 1,
+        speedX: Math.random() * 1 - 0.5,
+        speedY: Math.random() * 1.5 + 0.5,
+    });
 }
-initSnow();
 
 function drawSnow() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "rgba(169,169,169,0.6)";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(169,169,169,0.6)';
     ctx.beginPath();
-    for (let s of snowflakes) {
+    for (const s of snowflakes) {
         ctx.moveTo(s.x, s.y);
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
         s.x += s.speedX;
         s.y += s.speedY;
-        if (s.y > canvas.height) { s.y = -5; s.x = Math.random()*canvas.width; }
+        if (s.y > canvas.height) { s.y = -5; s.x = Math.random() * canvas.width; }
         if (s.x > canvas.width)  s.x = 0;
         if (s.x < 0)             s.x = canvas.width;
     }
@@ -313,71 +307,100 @@ function drawSnow() {
 }
 drawSnow();
 
-// ---------- 4️⃣ TAB SWITCHING ----------
+// ── 4. TABS ───────────────────────────────────────────────────────────────────
 function showTab(tabId, el) {
-    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-
-    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active-tab'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
     if (el) el.classList.add('active-tab');
 }
 document.getElementById('tab-modules').classList.add('active-tab');
 
-// ---------- 5️⃣ MODULE LOADER ----------
+// ── 5. MODULE LOADER ─────────────────────────────────────────────────────────
 function loadModule(url) {
     const f = document.getElementById('moduleFrame');
-    f.src = url;
+    f.src = proxyUrl(url);
     f.style.display = 'block';
 }
 
-// ---------- 6️⃣ WEB VIEWER ----------
-function openViewer(e) {
-    if (e) e.preventDefault();
-    let u = document.getElementById('viewer-url').value.trim();
-    if (!u) return;
+// ── 6. WEB VIEWER ─────────────────────────────────────────────────────────────
+// Scramjet encodes the destination URL and prefixes it with its SW scope.
+// The SW scope defaults to /scramjet/ — adjust if you changed it.
+const SCRAMJET_PREFIX = '/scramjet/';
+
+function proxyUrl(raw) {
+    let u = raw.trim();
     if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
-    const encoded = encodeURIComponent(u);
-    const path = `/viewer/${encoded}`;
+    // ScramjetServiceWorker.encodeUrl is available on the page once the SW
+    // is active; fall back to a simple btoa encode so the page doesn't break.
+    if (window.__scramjet__?.encodeUrl) {
+        return SCRAMJET_PREFIX + window.__scramjet__.encodeUrl(u);
+    }
+    // Basic fallback (Scramjet SW will re-encode on first request)
+    return SCRAMJET_PREFIX + btoa(u).replace(/=/g, '');
+}
+
+function openViewer() {
+    const raw = document.getElementById('viewer-url').value.trim();
+    if (!raw) return;
     const f = document.getElementById('viewerFrame');
-    f.src = path;
+    f.src = proxyUrl(raw);
     f.style.display = 'block';
 }
 
-// ---------- 7️⃣ THEME TOGGLE ----------
+// ── 7. SW STATUS BADGE ────────────────────────────────────────────────────────
+const badge = document.getElementById('sw-status');
+
+async function pollSwReady() {
+    if (!('serviceWorker' in navigator)) {
+        badge.textContent = '❌ Service workers not supported';
+        return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    if (reg.active) {
+        badge.textContent = '✅ Proxy ready';
+        badge.style.background = 'rgba(26,115,232,.12)';
+        badge.style.color = '#1a73e8';
+    }
+}
+pollSwReady();
+
+// ── 8. THEME ──────────────────────────────────────────────────────────────────
 function changeTheme() {
     const sel = document.getElementById('theme-select').value;
+    const r   = document.documentElement.style;
     if (sel === 'dark') {
-        document.documentElement.style.setProperty('--bg', '#121212');
-        document.documentElement.style.setProperty('--txt', '#ffffff');
-        document.documentElement.style.setProperty('--card', 'rgba(30,30,30,.85)');
-        document.documentElement.style.setProperty('--accent', '#00ffcc');
-        document.documentElement.style.setProperty('--accent-hover', '#00e6b8');
-        document.documentElement.style.setProperty('--border', 'rgba(255,255,255,.1)');
+        r.setProperty('--bg',           '#121212');
+        r.setProperty('--txt',          '#ffffff');
+        r.setProperty('--card',         'rgba(30,30,30,.85)');
+        r.setProperty('--accent',       '#00ffcc');
+        r.setProperty('--accent-hover', '#00e6b8');
+        r.setProperty('--border',       'rgba(255,255,255,.1)');
         canvas.style.background = 'linear-gradient(to bottom,#0a0a0f,#121212)';
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
     } else {
-        document.documentElement.style.setProperty('--bg', '#f0f2f5');
-        document.documentElement.style.setProperty('--txt', '#1a1a1a');
-        document.documentElement.style.setProperty('--card', 'rgba(255,255,255,.95)');
-        document.documentElement.style.setProperty('--accent', '#1a73e8');
-        document.documentElement.style.setProperty('--accent-hover', '#1557b0');
-        document.documentElement.style.setProperty('--border', 'rgba(0,0,0,.1)');
+        r.setProperty('--bg',           '#f0f2f5');
+        r.setProperty('--txt',          '#1a1a1a');
+        r.setProperty('--card',         'rgba(255,255,255,.95)');
+        r.setProperty('--accent',       '#1a73e8');
+        r.setProperty('--accent-hover', '#1557b0');
+        r.setProperty('--border',       'rgba(0,0,0,.1)');
         canvas.style.background = 'linear-gradient(to bottom,#e6e9f0,#f0f2f5)';
-        ctx.fillStyle = "rgba(169,169,169,0.6)";
     }
 }
 
-// ---------- 8️⃣ AI MOCK (replace with real API later) ----------
-function sendAI() {
+// ── 9. AI (mock – swap sendAI body for a real fetch to your backend) ──────────
+async function sendAI() {
     const prompt = document.getElementById('ai-input').value.trim();
     const out    = document.getElementById('ai-output');
     if (!prompt) return;
-    out.innerHTML = `<em>Processing…</em> <br><br>Prompt: <strong>${prompt}</strong>`;
-    // Simulated delay
-    setTimeout(() => {
-        out.innerHTML += `<br><br><strong>Response:</strong> This is a placeholder answer.
-        Connect your backend (OpenAI, Claude, etc.) to get live results.`;
-    }, 1500);
+    out.innerHTML = `<em>Thinking…</em>`;
+
+    // ── Replace this block with a real fetch('/api/ai', …) call ──────────────
+    await new Promise(r => setTimeout(r, 1200));
+    out.innerHTML =
+        `<strong>You:</strong> ${prompt}<br><br>` +
+        `<strong>Tutor:</strong> This is a placeholder. ` +
+        `Wire up <code>/api/ai</code> on the server and call it here.`;
 }
 </script>
 
