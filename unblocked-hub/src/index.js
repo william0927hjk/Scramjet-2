@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { scramjetPath } from '@mercuryworkshop/scramjet/path';
-import { wispServerFactory } from '@mercuryworkshop/wisp-js/server';
+import WispServer from '@mercuryworkshop/wisp-js/server'; // Changed to default import
 import { WebSocketServer } from 'ws';
 import 'dotenv/config';
 
@@ -33,8 +33,14 @@ fastify.ready((err) => {
     const wss = new WebSocketServer({ server: fastify.server });
 
     wss.on('connection', (ws, req) => {
-        // Factory handles connection routing for web proxy bypass
-        const wispServer = wispServerFactory(ws, req);
+        // Fallback check to handle both factory methods or raw initialization 
+        if (typeof WispServer === 'function') {
+            new WispServer(ws, req);
+        } else if (WispServer && typeof WispServer.wispServerFactory === 'function') {
+            WispServer.wispServerFactory(ws, req);
+        } else {
+            console.error('Could not map the exact WispServer initialization routine.');
+        }
         
         ws.on('error', (error) => console.error('WebSocket Error:', error));
     });
