@@ -2,6 +2,7 @@
 // -------------------------------------------------
 // UI helper functions – identical to the previous inline script
 // -------------------------------------------------
+
 /* ---------- Tab navigation ---------- */
 export function showTab(id) {
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -27,9 +28,7 @@ export async function sendAI() {
   try {
     const resp = await fetch('/api/ai-game', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
@@ -70,7 +69,7 @@ function escapeHTML(str) {
 }
 
 /* ---------- Persist theme between sessions ---------- */
-const { sessionStorage } = require('node-sessionstorage');
+import { sessionStorage } from 'node-sessionstorage';
 (function restoreTheme() {
   const saved = sessionStorage.getItem('unblockedHubTheme');
   if (saved) {
